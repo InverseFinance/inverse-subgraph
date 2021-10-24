@@ -1,6 +1,6 @@
 # Inverse-subgraph v0.1.0
 
-[inverse](https://inverse.finance/) is an open-source protocol for algorithmic, efficient Money Markets on the Ethereum blockchain and a a fork of Compound. 
+[Inverse](https://inverse.finance/) is an open-source protocol for algorithmic, efficient Money Markets on the Ethereum blockchain and a a fork of Compound. 
 
 This Subgraph indexes the data of the protocol.
 
