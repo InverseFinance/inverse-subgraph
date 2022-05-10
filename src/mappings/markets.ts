@@ -20,20 +20,14 @@ export function createMarket(marketAddress: string): Market {
   let tryDenomination = contract.try_underlying()
   let trySymbol = contract.try_symbol()
 
-  log.debug(`in createMarket : {}`, [marketAddress])
   let isSame = false
   if (marketAddress == cETHAddress) {
     isSame = true
   }
-  log.debug(`in createMarket cETHAddress : {}, {}, is same? {}`, [
-    cETHAddress,
-    marketAddress,
-    isSame.toString(),
-  ])
 
   // It is CETH, which has a slightly different interface
   if (marketAddress == cETHAddress) {
-    log.debug(`inif market cETHAddress : {}, {}`, [cETHAddress, marketAddress])
+    log.debug(`Market cETHAddress : {}, {}`, [cETHAddress, marketAddress])
     market = new Market(cETHAddress) // marketAddress)
     market.underlyingAddress = Address.fromString(
       '0x0000000000000000000000000000000000000000',
@@ -46,34 +40,20 @@ export function createMarket(marketAddress: string): Market {
     market.symbol = 'anETH' //contract.symbol()
     market.decimals = 8
 
-    // log.debug(`using new code anETH : {}`, [market.underlyingAddress.toString()])
-
     // It is all other CERC20 contracts
   } else {
-    log.debug('in else for {}', [marketAddress])
+
     if (!tryDenomination.reverted && !trySymbol.reverted) {
-      log.debug(`tryDenomination is  : {}, for marketAddress `, [
-        tryDenomination.value.toString(),
-        marketAddress,
-      ])
-      log.debug(`trySymbol is  : {}`, [trySymbol.value])
       market = new Market(marketAddress)
       market.name = contract.try_name().value
-      log.debug(`market.name is  : {}`, [contract.try_name().value])
       market.symbol = contract.symbol()
-      log.debug(`market.symbol is  : {}`, [market.symbol])
 
       market.underlyingAddress = tryDenomination.value
       let underlyingContract = ERC20.bind(market.underlyingAddress as Address)
-      log.debug(`market.underlyingAddress is {}`, [
-        market.underlyingAddress.toHexString(),
-      ])
+
       market.underlyingDecimals = underlyingContract.try_decimals().value
-      // log.debug(`market.underlyingDecimals is {}`, [market.underlyingDecimals as string])
       market.underlyingName = underlyingContract.try_name().value
-      log.debug(`market.underlyingName is {}`, [market.underlyingName.toString()])
       market.underlyingSymbol = underlyingContract.try_symbol().value //trySymbol.value
-      log.debug(`market.underlyingSymbol is {}`, [market.underlyingSymbol.toString()])
 
       let mainContract = ERC20.bind(Address.fromString(market.id))
 
@@ -109,7 +89,6 @@ export function createMarket(marketAddress: string): Market {
   market.accrualBlockNumber = 0
   market.blockTimestamp = 0
   market.borrowIndex = zeroBD
-  log.debug(`resBigInt is {}, mantissastuff is {} in createMarket`, [resBigInt.toString(), mantissaFactorBD.toString()])
 
   market.reserveFactor = reserveFactor.reverted ? BigInt.fromI32(0).toBigDecimal() : reserveFactor.value.toBigDecimal().div(mantissaFactorBD)
   market.rewardPerBlock = rewardPerBlock.reverted ? BigInt.fromI32(0).toBigDecimal() : rewardPerBlock.value.toBigDecimal().div(mantissaFactorBD)
@@ -118,11 +97,6 @@ export function createMarket(marketAddress: string): Market {
 
   let compSpeed = comptrollerContract.try_compSpeeds(Address.fromString(marketAddress))
   market.compSpeed = compSpeed.reverted ? BigInt.fromI32(0).toBigDecimal() : compSpeed.value.toBigDecimal().div(mantissaFactorBD)
-  log.debug(`compspeed is {}, marketAddress: {}`, [market.compSpeed.toString(), marketAddress])
-
-  // event.params.newReserveFactorMantissa.toBigDecimal().div(mantissaFactorBD).truncate(mantissaFactor)
-  log.debug(`cash is : {}, address: {} `, [market.cash.toString(), market.id])
-  log.debug(`underlying name is : {}, and {}`, [market.underlyingName, market.name])
 
   return market
 }

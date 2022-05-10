@@ -122,7 +122,6 @@ export function getOrCreateAccountCTokenTransaction(
       contractAddress,
       underlyingDecimals,
     )
-    log.debug(`tokenPriceInEth for this tx: {}`, [tokenPriceEth.toString()])
     transaction.underlyingPrice = tokenPriceEth.truncate(underlyingDecimals)
     transaction.exchangeRate = exchangeRate
 

@@ -92,7 +92,6 @@ export function handleMint(event: Mint): void {
     market.cash = market.cash.plus(underlyingAmount)
 
     market.totalReserves = getTotalReserves(market as Market)
-    log.debug(`updating totalreserves: {}, tx: {}`, [market.totalReserves.toString(), event.transaction.hash.toHexString()])
     market.save()
   }
 
@@ -159,10 +158,8 @@ export function handleRedeem(event: Redeem): void {
     let contract = CToken.bind(Address.fromString(marketID))
     let tryCash = contract.try_getCash()
     market.cash = tryCash.reverted ? BigInt.fromI32(0).toBigDecimal() : tryCash.value.toBigDecimal().div(exponentToBigDecimal(market.underlyingDecimals))
-    log.debug(`cash for {} is {}`, [marketID, market.cash.toString()])
 
     market.totalReserves = getTotalReserves(market as Market)
-    log.debug(`updating totalreserves: {}, tx: {}`, [market.totalReserves.toString(), event.transaction.hash.toHexString()])
     market.save()
   }
 
@@ -220,10 +217,8 @@ export function handleBorrow(event: Borrow): void {
   let tryCash = contract.try_getCash()
   market.cash = tryCash.reverted ? BigInt.fromI32(0).toBigDecimal() : tryCash.value.toBigDecimal().div(exponentToBigDecimal(market.underlyingDecimals))
   // market.cash = BigInt.fromI32(0).toBigDecimal() // : tryCash.value.toBigDecimal().div(market.underlyingDecimals)
-  log.debug(`market cash for {} is {}`, [marketID, market.cash.toString()])
 
   market.totalReserves = getTotalReserves(market as Market)
-  log.debug(`updating totalreserves: {}, tx: {}`, [market.totalReserves.toString(), event.transaction.hash.toHexString()])
 
   market.save()
 
@@ -269,9 +264,6 @@ export function handleBorrow(event: Borrow): void {
 
   let contractAddress = Address.fromString(market.id)
   let tokenPriceEth = getTokenPrice(contractAddress, market.underlyingDecimals)
-  log.debug(`tokenPriceInEth for this tx in BorrowEvent is: {}`, [
-    tokenPriceEth.toString(),
-  ])
 
   let borrow = new BorrowEvent(borrowID)
   borrow.amount = borrowAmount
@@ -330,10 +322,8 @@ export function handleRepayBorrow(event: RepayBorrow): void {
   let contract = CToken.bind(Address.fromString(marketID))
   let tryCash = contract.try_getCash()
   market.cash = tryCash.reverted ? BigInt.fromI32(0).toBigDecimal() : tryCash.value.toBigDecimal().div(exponentToBigDecimal(market.underlyingDecimals))
-  log.debug(`market cash for {} is {}`, [marketID, market.cash.toString()])
 
   market.totalReserves = getTotalReserves(market as Market)
-  log.debug(`updating totalreserves: {}, tx: {}`, [market.totalReserves.toString(), event.transaction.hash.toHexString()])
 
   market.save()
 
@@ -379,9 +369,6 @@ export function handleRepayBorrow(event: RepayBorrow): void {
 
   let contractAddress = Address.fromString(market.id)
   let tokenPriceEth = getTokenPrice(contractAddress, market.underlyingDecimals)
-  log.debug(`tokenPriceInEth for this tx in handleRepayBorrow is: {}`, [
-    tokenPriceEth.toString(),
-  ])
 
   let repay = new RepayEvent(repayID)
   repay.amount = repayAmount
@@ -526,7 +513,6 @@ export function handleTransfer(event: Transfer): void {
     event.params.amount.toBigDecimal().div(exponentToBigDecimal(market.decimals)), //cTokenDecimalsBD),
   )
   let amountUnderylingTruncated = amountUnderlying.truncate(market.underlyingDecimals)
-  log.debug(`tx is {}`, [event.transaction.hash.toHexString()])
 
   // Checking if the tx is FROM the cToken contract (i.e. this will not run when minting)
   // If so, it is a mint, and we don't need to run these calculations
@@ -557,10 +543,6 @@ export function handleTransfer(event: Transfer): void {
         .div(exponentToBigDecimal(market.decimals))
         .truncate(cTokenDecimals),
     )
-    log.debug(`fromCTokenBalance is {}, amount was {}`, [
-      cTokenStatsFrom.cTokenBalance.toString(),
-      event.params.amount.toString(),
-    ])
 
     cTokenStatsFrom.totalUnderlyingRedeemed = cTokenStatsFrom.totalUnderlyingRedeemed.plus(
       amountUnderylingTruncated,
@@ -604,13 +586,9 @@ export function handleTransfer(event: Transfer): void {
     //   .toBigDecimal()
     //   .div(cTokenDecimalsBD)
     //   .truncate(cTokenDecimals)
-    log.debug(`toCTokenBalance is {}, amount was {}, cTokenDecimalsBD {}, cTokenDecimals {}`, [
-      cTokenStatsTo.cTokenBalance.toString(),
-      event.params.amount.toString(), cTokenDecimalsBD.toString(), cTokenDecimals.toString()
-    ])
+
     let amt = event.params.amount.toBigDecimal()
-    log.debug(`cTokenBalance manual {}, {}`, [amt.div(cTokenDecimalsBD).toString(), amt.div(cTokenDecimalsBD).truncate(cTokenDecimals).toString()])
-    log.debug(`cTokenDecimals manual div {}`, [amt.div(cTokenDecimalsBD).truncate(18).toString()])
+
     cTokenStatsTo.totalUnderlyingSupplied = cTokenStatsTo.totalUnderlyingSupplied.plus(
       amountUnderylingTruncated,
     )
@@ -675,9 +653,6 @@ export function handleAccrueInterest(event: AccrueInterest): void {
   let contractAddress = Address.fromString(market.id)
   let contract = CToken.bind(contractAddress)
 
-  log.debug(`blockNumber, blocknumbermarket: {}`, [blockTimestamp.toString(), market.accrualBlockNumber as string])
-  log.debug(`blockNumber marketID: {}`, [marketID.toString()])
-
   let tokenPriceEth = getTokenPrice(
     // blockNumber,
     contractAddress,
@@ -686,12 +661,10 @@ export function handleAccrueInterest(event: AccrueInterest): void {
 if (market.accrualBlockNumber != blockNumber) {
     // let usdPriceInEth = getUSDCPriceETH(blockNumber)
     market.underlyingPrice = tokenPriceEth.truncate(market.underlyingDecimals)
-    log.debug(`in if {}`, [marketID.toString()])
   }
-  log.debug(`blockNumber market.underlyingPrice: {}`, [market.underlyingPrice.toString()])
 
   market.underlyingPrice = tokenPriceEth.truncate(market.underlyingDecimals)
-  log.debug(`blockNumber market.underlyingPrice after: {}`, [marketID.toString()])
+
   market.accrualBlockNumber = blockNumber
   market.blockTimestamp = blockTimestamp
 
@@ -726,7 +699,6 @@ if (market.accrualBlockNumber != blockNumber) {
     .truncate(mantissaFactor)
 
   market.totalReserves = getTotalReserves(market as Market)
-  log.debug(`updating totalreserves: {}, tx: {}`, [market.totalReserves.toString(), event.transaction.hash.toHexString()])
 
   // This fails on only the first call to cZRX. It is unclear why, but otherwise it works.
   // So we handle it like this.
@@ -761,7 +733,6 @@ export function handleNewReserveFactor(event: NewReserveFactor): void {
   if (!isMarket(marketID)) {
     return
   }
-  log.debug(`resBigInt is {}, mantissastuff is {}`, [resBigInt.toString(), mantissaFactorBD.toString()])
   // market.reserveFactor = event.params.newReserveFactorMantissa.div(resBigInt)
   market.reserveFactor = event.params.newReserveFactorMantissa.toBigDecimal().div(mantissaFactorBD).truncate(mantissaFactor)
   market.save()
@@ -784,61 +755,49 @@ export function handleNewMarketInterestRateModel(
 
 export function handleNewRewardPerBlock(event: NewRewardPerBlock): void {
   let market = Market.load(event.address.toHexString())
-  log.debug(`rewardperblock new {}`, [event.transaction.hash.toHexString()])
   if (market == null) {
     market = createMarket(event.address.toHexString())
   }
   let marketID = event.address.toHexString()
-  log.debug(`rewardperblock marketID {}`, [marketID])
   if (!isMarket(marketID)) {
     return
   }
-  log.debug(`rewardperblock before {}`, [market.rewardPerBlock.toString()])
   market.rewardPerBlock = event.params.newRewardPerBlock
     .toBigDecimal()
     .div(exponentToBigDecimal(market.underlyingDecimals))
     .truncate(market.underlyingDecimals)
-  log.debug(`rewardperblock after {}`, [market.rewardPerBlock.toString()])
   market.save()
 }
 
 export function handleReservesAdded(event: ReservesAdded): void {
   let market = Market.load(event.address.toHexString())
-  log.debug(`reserves added {}`, [event.transaction.hash.toHexString()])
   if (market == null) {
     market = createMarket(event.address.toHexString())
   }
   let marketID = event.address.toHexString()
-  log.debug(`reserves added marketID {}`, [marketID])
   if (!isMarket(marketID)) {
     return
   }
-  log.debug(`reserves added prevtotalreserves {}, newtotalreserves to add`, [market.totalReserves.toString(), event.params.newTotalReserves.toString()])
   market.totalReserves = event.params.newTotalReserves
     .toBigDecimal()
     .div(exponentToBigDecimal(market.underlyingDecimals))
     .truncate(market.underlyingDecimals)
-  log.debug(`reserves added new totalReaserves {}`, [market.totalReserves.toString()])
   market.save()
 }
 
 export function handleReservesUpdated(event: ReservesReduced): void {
   let market = Market.load(event.address.toHexString())
-  log.debug(`reserves reduced {}`, [event.transaction.hash.toHexString()])
   if (market == null) {
     market = createMarket(event.address.toHexString())
   }
   let marketID = event.address.toHexString()
-  log.debug(`reserves reduced marketID {}`, [marketID])
   if (!isMarket(marketID)) {
     return
   }
-  log.debug(`reserves reduced prevtotalreserves {}`, [market.totalReserves.toString()])
   market.totalReserves = event.params.newTotalReserves
     .toBigDecimal()
     .div(exponentToBigDecimal(market.underlyingDecimals))
     .truncate(market.underlyingDecimals)
-  log.debug(`reserves reduced new totalReaserves {}`, [market.totalReserves.toString()])
 
   market.save()
 }

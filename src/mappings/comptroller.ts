@@ -26,13 +26,9 @@ export function handleMarketListed(event: MarketListed): void {
 
   // Dynamically index all new listed tokens
   CToken.create(event.params.cToken)
-  log.debug(`event.params.cToken is : {}, {}`, [
-    event.params.cToken.toHexString(),
-    event.transaction.hash.toHexString(),
-  ])
   // Create the market for this token, since it's now been listed.
   let market = createMarket(event.params.cToken.toHexString())
-  log.debug(`creating market from market listed here: {}`, [market.id.toString()])
+
   if (market == null) {
     return
   } else {
@@ -65,18 +61,6 @@ export function handleMarketEntered(event: MarketEntered): void {
     )
     cTokenStats.enteredMarket = true
     cTokenStats.save()
-    // } else {
-    //   log.debug(`creating market manually here: {}`, [event.params.cToken.toHexString()])
-    //   // Dynamically index all new listed tokens
-    //   CToken.create(event.params.cToken)
-    //   // Create the market for this token, since it's now been listed.
-    //   let market = createMarket(event.params.cToken.toHexString())
-    //   log.debug(`market is : {}`, [event.params.cToken.toHexString()])
-    //   if (market == null) {
-    //     return
-    //   } else {
-    //     market.save()
-    //   }
   }
 }
 
@@ -154,15 +138,11 @@ export function handleNewPriceOracle(event: NewPriceOracle): void {
 
 export function handleCompSpeedUpdated(event: CompSpeedUpdated): void {
   let market = Market.load(event.params.cToken.toHexString())
-  log.debug(`compspeed tx is {}`, [event.transaction.hash.toHexString()])
   if (market != null) {
-    log.debug(`updating compspeed for {}, prev compspeed is {}`, [market.id, market.compSpeed.toString()])
     market.compSpeed = event.params.newSpeed
       .toBigDecimal()
       .div(mantissaFactorBD)
     market.save()
-    log.debug(`updating compspeed for {}, compspeed is {}`, [market.id, market.compSpeed.toString()])
   } else {
-    log.debug(`market isnull for some reason is {}`, [event.params.cToken.toHexString()])
   }
 }

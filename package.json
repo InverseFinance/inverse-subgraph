@@ -7,7 +7,7 @@
     "all": "yarn codegen && yarn build && yarn deploy",
     "codegen": "graph codegen --output-dir src/types/",
     "build": "graph build --ipfs https://api.staging.thegraph.com/ipfs/ ",
-    "deploy": "graph deploy --studio inverse-dev-4",
+    "deploy": "graph deploy --studio inverse-subgraph",
     "prettier": "./node_modules/.bin/prettier —-write '**/*.ts'"
   },
   "devDependencies": {
